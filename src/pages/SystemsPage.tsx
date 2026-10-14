@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Cpu, Shield, Users, Terminal, CheckCircle2, Layers, Server, Code2, Cloud, ArrowRight } from 'lucide-react';
 import { CoreSystems } from '../components/CoreSystems';
 import { SkillsMatrix } from '../components/SkillsMatrix';
+import { TextContrastZone } from '../components/TextContrastZone';
 
 export const SystemsPage: React.FC = () => {
   return (
@@ -10,9 +11,9 @@ export const SystemsPage: React.FC = () => {
       {/* Header & Breadcrumb */}
       <div className="mb-12">
         <div className="flex items-center gap-2 text-xs font-mono-code text-white mb-4">
-          <Link to="/" className="hover:text-emerald-400 transition-colors">HOME</Link>
+          <Link to="/" className="hover:text-[#00FF66] transition-colors">HOME</Link>
           <span>/</span>
-          <span className="text-[#b2f1ff]">SKILLS &amp; VISION</span>
+          <span className="text-[#7C7CFF]">SKILLS &amp; VISION</span>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-8 border-b border-white/10">
@@ -20,14 +21,19 @@ export const SystemsPage: React.FC = () => {
             <h1 className="text-4xl sm:text-6xl font-bricolage font-bold text-white tracking-tight">
               Skills &amp; Architectural Vision
             </h1>
-            <p className="text-base sm:text-lg text-white font-light max-w-2xl mt-3 leading-relaxed">
-              Applied machine learning competencies, full-stack engineering toolkits, hardware/IoT integrations, and long-term architectural vision for autonomous agentic systems.
-            </p>
+            <div className="mt-3">
+              <TextContrastZone
+                as="p"
+                className="text-base sm:text-lg text-[#F2F0E6] font-light max-w-2xl leading-relaxed py-2 pl-3 pr-8 -ml-3"
+              >
+                Applied machine learning competencies, full-stack engineering toolkits, hardware/IoT integrations, and long-term architectural vision for autonomous agentic systems.
+              </TextContrastZone>
+            </div>
           </div>
 
           <div className="text-right hidden sm:block font-mono-code text-xs text-white">
             <div>32 Validated Technologies</div>
-            <div className="text-emerald-400 text-[11px] mt-1">Multi-Modal · Edge IoT · Microservices</div>
+            <div className="text-[#00FF66] text-[11px] mt-1">Multi-Modal · Edge IoT · Microservices</div>
           </div>
         </div>
       </div>

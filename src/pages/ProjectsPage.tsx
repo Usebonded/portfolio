@@ -3,6 +3,66 @@ import { Search, Filter, ArrowUpRight, Github, Linkedin, ExternalLink, Sparkles,
 import { PROJECTS, ADDITIONAL_PROJECTS } from '../data/portfolioData';
 import { Project } from '../types';
 import { Link } from 'react-router-dom';
+import { motion, Variants } from 'framer-motion';
+
+// Staggered Entrance Variants for Editorial Dynamic Presentation
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 36,
+    scale: 0.96,
+    filter: 'blur(6px)',
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: {
+      duration: 0.6,
+      ease: [0.16, 1, 0.3, 1] as const, // Editorial snappy cubic-bezier curve
+    },
+  },
+};
+
+const additionalGridVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.06,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const additionalCardVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 24,
+    scale: 0.97,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      ease: [0.16, 1, 0.3, 1] as const,
+    },
+  },
+};
 
 interface ProjectsPageProps {
   onSelectProject: (project: Project) => void;
@@ -39,9 +99,9 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
       {/* Header & Breadcrumb */}
       <div className="mb-12">
         <div className="flex items-center gap-2 text-xs font-mono-code text-white mb-4">
-          <Link to="/" className="hover:text-emerald-400 transition-colors">HOME</Link>
+          <Link to="/" className="hover:text-[#00FF66] transition-colors">HOME</Link>
           <span>/</span>
-          <span className="text-[#b2f1ff]">PROJECTS ARCHIVE</span>
+          <span className="text-[#7C7CFF]">PROJECTS ARCHIVE</span>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-8 border-b border-white/10">
@@ -56,7 +116,7 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
 
           <div className="text-right hidden sm:block">
             <div className="text-xs font-mono-code text-white">
-              Total Cataloged: <span className="font-bold text-[#b2f1ff]">{PROJECTS.length + ADDITIONAL_PROJECTS.length} Systems</span>
+              Total Cataloged: <span className="font-bold text-[#7C7CFF]">{PROJECTS.length + ADDITIONAL_PROJECTS.length} Systems</span>
             </div>
             <div className="text-[11px] font-mono-code text-white mt-1">
               Active Inception: June 2025 – Present
@@ -92,12 +152,12 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by tech, keyword, or name..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-full bg-neutral-900/80 border border-white/15 text-white text-xs font-mono-code placeholder-white/40 focus:outline-none focus:border-[#b2f1ff] transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-full bg-neutral-900/80 border border-white/15 text-white text-xs font-mono-code placeholder-white/40 focus:outline-none focus:border-[#5B5BFF] transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-white hover:text-emerald-400"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-white hover:text-[#00FF66]"
             >
               Clear
             </button>
@@ -107,7 +167,12 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
 
       {/* Projects Grid */}
       {filteredProjects.length === 0 ? (
-        <div className="text-center py-20 rounded-3xl border border-white/10 bg-neutral-900/50 backdrop-blur-xl">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-center py-20 rounded-3xl border border-white/10 bg-neutral-900/50 backdrop-blur-xl"
+        >
           <p className="text-white font-mono-code text-sm">No systems found matching &quot;{searchQuery}&quot; in category &quot;{selectedCategory}&quot;.</p>
           <button
             onClick={() => {
@@ -118,14 +183,26 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
           >
             Reset Filters
           </button>
-        </div>
+        </motion.div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+        <motion.div
+          key={`${selectedCategory}-${searchQuery}`}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16"
+        >
           {filteredProjects.map((project, idx) => (
-            <div
+            <motion.div
               key={project.id}
+              variants={cardVariants}
+              whileHover={{
+                y: -6,
+                transition: { duration: 0.25, ease: 'easeOut' }
+              }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => onSelectProject(project)}
-              className="group relative rounded-3xl overflow-hidden bg-neutral-900/80 hover:bg-neutral-900/95 border border-white/10 p-6 flex flex-col justify-between hover:border-white/30 backdrop-blur-xl transition-all duration-300 cursor-pointer shadow-2xl hover:-translate-y-1"
+              className="group relative rounded-3xl overflow-hidden bg-neutral-900/80 hover:bg-neutral-900/95 border border-white/10 p-6 flex flex-col justify-between hover:border-white/30 backdrop-blur-xl shadow-2xl cursor-pointer"
             >
               {/* Image banner preview if exists */}
               {project.image && (
@@ -134,10 +211,13 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
                     src={project.image}
                     alt={project.title}
                     loading="lazy"
+                    decoding="async"
+                    width="600"
+                    height="340"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-transparent" />
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-mono-code text-[#b2f1ff]">
+                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-mono-code text-[#7C7CFF]">
                     {project.category}
                   </div>
                 </div>
@@ -149,10 +229,10 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
                   <span>#{idx + 1 < 10 ? `0${idx + 1}` : `${idx + 1}`}</span>
                 </div>
 
-                <h3 className="text-2xl font-bricolage font-bold text-white mb-1.5 group-hover:text-[#b2f1ff] transition-colors">
+                <h3 className="text-2xl font-bricolage font-bold text-white mb-1.5 group-hover:text-[#7C7CFF] transition-colors">
                   {project.title}
                 </h3>
-                <p className="text-xs font-mono-code text-emerald-400 mb-2.5">
+                <p className="text-xs font-mono-code text-[#00FF66] mb-2.5">
                   {project.tagline}
                 </p>
                 <p className="text-xs text-white leading-relaxed line-clamp-3 mb-4">
@@ -179,7 +259,7 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
                 </div>
 
                 <div className="flex items-center justify-between text-xs font-mono-code text-white pt-2 border-t border-white/5">
-                  <span className="flex items-center gap-1 text-[#b2f1ff] group-hover:underline">
+                  <span className="flex items-center gap-1 text-[#7C7CFF] group-hover:underline">
                     Inspect Architecture &amp; Case Study
                   </span>
                   <div className="flex items-center gap-2">
@@ -201,9 +281,9 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
       {/* Relevant Learning, Coursework & Workshops */}
@@ -239,11 +319,22 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <motion.div
+          variants={additionalGridVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-50px' }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+        >
           {ADDITIONAL_PROJECTS.map((extra, idx) => (
-            <div
+            <motion.div
               key={idx}
-              className="p-5 rounded-2xl border border-white/10 bg-neutral-900/80 hover:bg-neutral-900/95 backdrop-blur-xl shadow-xl flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:border-white/25"
+              variants={additionalCardVariants}
+              whileHover={{
+                y: -4,
+                transition: { duration: 0.2, ease: 'easeOut' }
+              }}
+              className="p-5 rounded-2xl border border-white/10 bg-neutral-900/80 hover:bg-neutral-900/95 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-white/25"
             >
               <div>
                 <div className="flex items-center justify-between text-xs text-white mb-2.5 font-mono-code">
@@ -272,9 +363,9 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
                   </a>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* Bottom CTA to Contact */}

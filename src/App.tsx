@@ -12,6 +12,7 @@ import { AmbientGlowFollower } from './components/AmbientGlowFollower';
 import { CustomCursor } from './components/CustomCursor';
 import { ScrollProgressBar } from './components/ScrollProgressBar';
 import { ScrollToTop } from './components/ScrollToTop';
+import { FloatingBackToTop } from './components/FloatingBackToTop';
 
 import { HomePage } from './pages/HomePage';
 import { ProjectsPage } from './pages/ProjectsPage';
@@ -80,20 +81,12 @@ export default function App() {
   return (
     <Router>
       <ScrollToTop />
-      <div className="relative min-h-screen bg-neutral-950 text-neutral-50 flex flex-col font-sans transition-colors duration-300 overflow-x-hidden selection:bg-emerald-500/30 selection:text-white">
+      <div className="relative min-h-screen bg-[#0A0A0A] text-[#F2F0E6] flex flex-col font-sans transition-colors duration-300 overflow-x-hidden selection:bg-[#5B5BFF]/30 selection:text-[#F2F0E6]">
         {/* Top Viewport Horizontal Scroll Progress Bar */}
         <ScrollProgressBar />
 
         {/* Film Grain Texture Overlay (Velos Template) */}
         <div className="bg-grain" />
-
-        {/* Global Architectural Vertical Grid Lines (Velos Template) */}
-        <div className="grid-lines" aria-hidden="true">
-          <div className="grid-line" />
-          <div className="grid-line hidden md:block" />
-          <div className="grid-line hidden lg:block" />
-          <div className="grid-line" />
-        </div>
 
         {/* 3D WebGL Background & Mouse Spotlight */}
         <ThreeCanvasBackground theme={theme} />
@@ -126,8 +119,13 @@ export default function App() {
               element={<ProjectsPage onSelectProject={setSelectedProject} />}
             />
             <Route path="/systems" element={<SystemsPage />} />
+            <Route path="/skills" element={<SystemsPage />} />
             <Route
               path="/about"
+              element={<AboutPage onOpenResume={() => setIsResumeOpen(true)} />}
+            />
+            <Route
+              path="/experience"
               element={<AboutPage onOpenResume={() => setIsResumeOpen(true)} />}
             />
             <Route
@@ -146,6 +144,9 @@ export default function App() {
           onOpenTerms={() => setLegalModalType('terms')}
           onOpenAudit={() => setIsAuditOpen(true)}
         />
+
+        {/* Floating Back to Top Button */}
+        <FloatingBackToTop />
 
         {/* Modals & Overlays */}
         <CaseStudyModal

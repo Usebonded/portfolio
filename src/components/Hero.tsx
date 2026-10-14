@@ -12,10 +12,10 @@ export const Hero: React.FC<HeroProps> = () => {
   };
 
   return (
-    <header className="relative w-full overflow-hidden flex flex-col justify-end pt-28 pb-12 md:pb-20 min-h-screen">
+    <header id="home" className="relative w-full overflow-hidden flex flex-col justify-end pt-28 pb-12 md:pb-20 min-h-screen">
       {/* Background Deep Gradient Overlay - Transparent to reveal 3D Particle Universe */}
       <div className="absolute inset-0 z-0 bg-transparent pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.08),rgba(255,255,255,0))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.12),rgba(255,253,240,0.02))]" />
         <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/60 via-transparent to-transparent" />
       </div>
 
@@ -25,8 +25,8 @@ export const Hero: React.FC<HeroProps> = () => {
         <div className="max-w-6xl relative">
           {/* Decorative Tagline */}
           <div className="flex items-center gap-3 mb-6">
-            <span className="h-[1px] w-8 bg-[#E5E7EB]/80" />
-            <span className="text-xs font-mono-code uppercase tracking-widest text-[#E5E7EB]">
+            <span className="h-[1px] w-8 bg-[#7C7CFF]/80" />
+            <span className="text-xs font-mono-code uppercase tracking-widest text-[#F2F0E6] drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
               Inception June 2025 · B.Tech AI &amp; ML
             </span>
           </div>
@@ -42,11 +42,16 @@ export const Hero: React.FC<HeroProps> = () => {
 
           {/* Status Badge below SAVAR SHETTY */}
           <div className="mt-6 inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-neutral-900/80 backdrop-blur-xl border border-white/10 shadow-2xl">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
+            <span className="w-2 h-2 rounded-full bg-[#00FF66] animate-pulse shadow-[0_0_10px_rgba(0,255,102,0.8)]" />
             <span className="text-[11px] sm:text-xs font-mono-code tracking-wider uppercase text-white font-medium">
               Status: Symbiosis University // Active
             </span>
           </div>
+
+          {/* Positioning Statement */}
+          <p className="mt-4 text-sm sm:text-base md:text-lg text-[#F2F0E6] font-light leading-relaxed max-w-2xl drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+            Building intelligent systems at the intersection of AI, machine learning and real-world applications.
+          </p>
         </div>
 
         {/* Developer Environment Shell (Directly below SAVAR SHETTY) */}

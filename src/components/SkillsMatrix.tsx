@@ -7,7 +7,7 @@ export const SkillsMatrix: React.FC = () => {
 
   const getDomainIcon = (title: string) => {
     if (title.includes('Frontend')) return <Code2 className="w-5 h-5 text-blue-500" />;
-    if (title.includes('Backend')) return <Server className="w-5 h-5 text-[#E5E7EB]" />;
+    if (title.includes('Backend')) return <Server className="w-5 h-5 text-[#A6A6A0]" />;
     if (title.includes('AI / Machine Learning')) return <Cpu className="w-5 h-5 text-indigo-500" />;
     return <Cloud className="w-5 h-5 text-amber-500" />;
   };

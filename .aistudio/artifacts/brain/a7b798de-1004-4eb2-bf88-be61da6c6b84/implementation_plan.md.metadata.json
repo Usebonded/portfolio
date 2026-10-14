@@ -1,0 +1,6 @@
+{
+  "summary": "Architectural blueprint for comprehensively upgrading Savar Shetty's portfolio website into a refined, minimal-futuristic editorial experience. Establishes the #0B0B0C / #141416 / #303034 / #7C7CFF / #F2F0E6 color system, preserves the Three.js particle universe, optimizes hero text readability with an unobtrusive linear gradient contrast layer, refactors the project showcase into an architectural card system while retaining interactive 3D coverflow controls, restructures skills and chronology into scannable editorial sections, and ensures WCAG AA contrast and full cross-device responsiveness.",
+  "updatedAt": "2026-10-14T10:23:00.299258559Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { Sun, Moon, Menu, X, FileText, CheckCircle, Search, Radio } from 'lucide-react';
-import { PERSONAL_INFO } from '../data/portfolioData';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 
 interface NavbarProps {
-  theme: 'dark' | 'light';
-  onToggleTheme: () => void;
-  onOpenResume: () => void;
-  onOpenAudit: () => void;
+  theme?: string;
+  onToggleTheme?: () => void;
+  onOpenResume?: () => void;
+  onOpenAudit?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({
-  theme,
-  onToggleTheme,
-  onOpenResume,
-  onOpenAudit
-}) => {
+export const Navbar: React.FC<NavbarProps> = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 40);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Close mobile menu on Escape key
   useEffect(() => {
@@ -24,187 +29,175 @@ export const Navbar: React.FC<NavbarProps> = ({
       if (e.key === 'Escape') setMobileMenuOpen(false);
     };
     if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
     }
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [mobileMenuOpen]);
 
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Projects', path: '/projects' },
-    { name: 'Skills & Vision', path: '/systems' },
-    { name: 'My Journey', path: '/about' },
-    { name: 'Contact', path: '/contact' }
+    { name: 'HOME', href: '#home' },
+    { name: 'ABOUT', href: '#about' },
+    { name: 'SKILLS', href: '#skills' },
+    { name: 'PROJECTS', href: '#projects' },
+    { name: 'EXPERIENCE', href: '#experience' },
+    { name: 'CONTACT', href: '#contact' }
   ];
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    setMobileMenuOpen(false);
+
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        const target = document.querySelector(href);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 100);
+      return;
+    }
+
+    const target = document.querySelector(href);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <>
-      {/* Floating Pill Nav Bar (Velos Template Style) */}
-      <div className="fixed top-5 right-0 left-0 z-50 flex justify-center px-4 pointer-events-none">
-        <nav
-          aria-label="Main Navigation"
-          className="pointer-events-auto flex items-center justify-between w-full max-w-4xl bg-neutral-900/80 border border-white/10 rounded-full py-2 px-3 sm:px-5 shadow-2xl backdrop-blur-xl transition-all duration-300"
-        >
-          {/* Logo Area */}
+      <header
+        role="banner"
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          isScrolled
+            ? 'bg-[#0A0A0A]/90 backdrop-blur-md border-b border-white/[0.12] py-4'
+            : 'bg-transparent py-6'
+        }`}
+      >
+        <div className="max-w-[94rem] mx-auto px-6 md:px-12 flex items-center justify-between">
+          {/* Logo */}
           <Link
             to="/"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={(e) => {
+              if (location.pathname === '/') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                setMobileMenuOpen(false);
+              }
+            }}
+            className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
             aria-label="Savar Shetty — Homepage"
-            className="flex items-center gap-2.5 group focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-full py-1 pr-2"
           >
-            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-neutral-950 font-bold text-xs font-mono group-hover:scale-105 transition-transform shadow-xs">
-              SS
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bricolage text-sm tracking-tight font-semibold text-white">
-                SAVAR SHETTY
-              </span>
-              <span className="text-[10px] font-mono-code text-white leading-none">
-                AI/ML ENGINEER
-              </span>
-            </div>
+            <div className="w-2 h-2 rounded-full bg-white group-hover:scale-125 transition-transform" />
+            <span className="font-anton tracking-tight text-lg sm:text-xl text-white uppercase">
+              SAVAR SHETTY
+            </span>
           </Link>
 
-          {/* Links */}
-          <div className="hidden md:flex items-center gap-1.5 text-xs font-medium text-white">
+          {/* Center Navigation Links (Editorial Minimalist) */}
+          <nav aria-label="Main Navigation" className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
-              <NavLink
+              <a
                 key={link.name}
-                to={link.path}
-                className={({ isActive }) =>
-                  `px-3.5 py-1.5 rounded-full transition-all duration-200 relative focus-visible:ring-2 focus-visible:ring-emerald-500 ${
-                    isActive
-                      ? 'bg-white/15 text-white font-semibold shadow-inner border border-white/20'
-                      : 'text-white/80 hover:text-white hover:bg-white/10'
-                  }`
-                }
+                href={location.pathname === '/' ? link.href : `/${link.href}`}
+                onClick={(e) => handleNavClick(e, link.href)}
+                className="text-xs font-mono uppercase tracking-widest text-[#A5A5A5] hover:text-white transition-colors relative py-1 group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
               >
-                {link.name}
-              </NavLink>
+                <span>{link.name}</span>
+                <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white group-hover:w-full transition-all duration-300 ease-out" />
+              </a>
             ))}
+          </nav>
+
+          {/* Right Action: Status Indicator */}
+          <div className="hidden sm:flex items-center gap-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.12] bg-[#141414] text-[10px] font-mono uppercase tracking-wider text-[#E8E8E8]">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              <span>AVAILABLE FOR OPPORTUNITIES</span>
+            </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <button
-              onClick={onOpenAudit}
-              aria-label="View Audit Report"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500"
-              title="Audit Sprint Checklist"
-            >
-              <CheckCircle className="w-4 h-4 text-white" />
-            </button>
+          {/* Mobile Hamburger Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+            className="lg:hidden p-2 rounded-md text-white hover:text-[#A5A5A5] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+      </header>
 
-            <button
-              onClick={onOpenResume}
-              className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-mono-code border border-white/15 bg-white/5 hover:bg-white/10 text-white transition-colors"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Manifest / CV</span>
-            </button>
-
-            <button
-              onClick={onToggleTheme}
-              aria-label="Toggle theme"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-
-            {/* Mobile Menu Hamburger */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle mobile menu"
-              aria-expanded={mobileMenuOpen}
-              className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-white/10"
-            >
-              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </button>
-          </div>
-        </nav>
-      </div>
-
-      {/* Accessible Responsive Mobile Drawer */}
+      {/* Clean Full-Screen Mobile Menu */}
       {mobileMenuOpen && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Mobile Navigation"
-          className="fixed inset-0 z-50 md:hidden bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setMobileMenuOpen(false);
-          }}
+          aria-label="Full-Screen Navigation Menu"
+          className="fixed inset-0 z-50 lg:hidden bg-[#050505] text-white flex flex-col justify-between p-8 sm:p-12 animate-in fade-in duration-300"
         >
-          <div className="absolute right-0 top-0 bottom-0 w-3/4 max-w-xs bg-neutral-950 border-l border-white/10 p-6 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-200">
-            <div>
-              <div className="flex items-center justify-between pb-4 mb-6 border-b border-white/10">
-                <span className="font-bricolage font-bold text-base text-white">
-                  SAVAR SHETTY
+          <div className="flex items-center justify-between border-b border-white/[0.12] pb-6">
+            <Link
+              to="/"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (location.pathname === '/') {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+              className="font-anton text-2xl tracking-tight text-white uppercase hover:text-[#A5A5A5] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
+              aria-label="Savar Shetty — Homepage"
+            >
+              SAVAR SHETTY
+            </Link>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              aria-label="Close menu"
+              className="p-2 text-white hover:text-[#A5A5A5] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white"
+            >
+              <X className="w-7 h-7" />
+            </button>
+          </div>
+
+          <nav className="flex flex-col gap-5 my-auto">
+            {navLinks.map((link, idx) => (
+              <a
+                key={link.name}
+                href={location.pathname === '/' ? link.href : `/${link.href}`}
+                onClick={(e) => handleNavClick(e, link.href)}
+                className="font-anton text-4xl sm:text-5xl uppercase tracking-tight text-[#A5A5A5] hover:text-white transition-colors flex items-center justify-between group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C7CFF] rounded-lg px-2 py-1"
+              >
+                <span>{link.name}</span>
+                <span className="text-xs font-mono text-[#555] group-hover:text-white transition-colors">
+                  0{idx + 1}
                 </span>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  aria-label="Close mobile menu"
-                  className="p-1.5 rounded-lg text-white hover:bg-white/10"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+              </a>
+            ))}
+          </nav>
 
-              <nav className="flex flex-col gap-2">
-                {navLinks.map((link) => (
-                  <NavLink
-                    key={link.name}
-                    to={link.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={({ isActive }) =>
-                      `px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
-                        isActive
-                          ? 'bg-white/20 text-white font-semibold border border-white/20'
-                          : 'text-white hover:bg-white/10'
-                      }`
-                    }
-                  >
-                    {link.name}
-                  </NavLink>
-                ))}
-
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onOpenAudit();
-                  }}
-                  className="px-3 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-colors text-left flex items-center gap-2 mt-2 pt-2 border-t border-white/10"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Audit Sprint Report</span>
-                </button>
-              </nav>
+          <div className="border-t border-white/[0.12] pt-6 flex flex-col gap-4">
+            <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#A5A5A5]">
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <span>AVAILABLE FOR OPPORTUNITIES</span>
             </div>
-
-            <div className="space-y-3 pt-6 border-t border-white/10">
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenResume();
-                }}
-                className="w-full py-2.5 rounded-full text-xs font-mono-code border border-white/20 text-white flex items-center justify-center gap-2 hover:bg-white/10"
-              >
-                <FileText className="w-4 h-4" />
-                <span>View Manifest / CV</span>
-              </button>
-
-              <Link
-                to="/contact"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-2.5 rounded-full text-xs font-medium bg-white text-black flex items-center justify-center shadow-lg font-semibold"
-              >
-                Engage Systems
-              </Link>
-            </div>
+            <p className="text-xs font-mono text-[#666]">
+              AI / ML RESEARCH &bull; SYSTEMS &bull; DESIGN
+            </p>
           </div>
         </div>
       )}
     </>
   );
 };
-

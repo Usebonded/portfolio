@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+@theme {
+  --color-canvas: #0B0B0C;
+  --color-surface: #141416;
+  --color-white: #F2F0E6;
+  --color-border: #303034;
+  --color-neutral-950: #0B0B0C;
+  --color-neutral-900: #141416;
+  --color-neutral-800: #1f1f23;
+  --color-zinc-950: #0B0B0C;
+  --color-zinc-900: #141416;
+  --color-zinc-800: #1f1f23;
+  --color-zinc-400: #A6A6AA;
+  --color-zinc-500: #A6A6AA;
+  --color-indigo-400: #7C7CFF;
+  --color-indigo-500: #7C7CFF;
+  --color-indigo-600: #5B5BFF;
+  --color-indigo-700: #3636B8;
+  --color-indigo-800: #3636B8;
+  --color-indigo-900: #3636B8;
+  --color-emerald-400: #00FF66;
+  --color-emerald-500: #00FF66;
+  --color-emerald-600: #00FF66;
+}
+
 @layer base {
   :root {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -11,14 +35,19 @@
   html {
     scroll-behavior: smooth;
     overflow-x: hidden;
-    background-color: #0a0a0a;
+    background-color: #0B0B0C;
+    color: #F2F0E6;
   }
 
   body {
     overflow-x: hidden;
     min-height: 100vh;
-    background-color: #0a0a0a;
-    color: #f5f5f5;
+    background-color: #0B0B0C;
+    color: #F2F0E6;
+  }
+
+  [id] {
+    scroll-margin-top: 5.5rem;
   }
 }
 
@@ -42,33 +71,6 @@
   pointer-events: none;
   opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-}
-
-/* Global Grid Lines */
-.grid-lines {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  max-width: 80rem;
-  margin: 0 auto;
-  pointer-events: none;
-  z-index: 5;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 1.5rem;
-  opacity: 0.08;
-}
-
-@media (min-width: 768px) {
-  .grid-lines {
-    padding: 0 3rem;
-  }
-}
-
-.grid-line {
-  width: 1px;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Shimmer Animation */
@@ -114,16 +116,21 @@
   background: rgba(255, 255, 255, 0.4);
 }
 
-/* Accessible focus ring */
+/* Accessible High-Contrast Keyboard Focus Ring */
 :focus-visible {
-  outline: 2px solid #10b981;
+  outline: 2px solid #7C7CFF;
   outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(124, 124, 255, 0.3);
 }
 
 /* Custom Cyber-Precision Cursor Support (Desktop fine-pointer devices only) */
 @media (hover: hover) and (pointer: fine) {
-  html, body, a, button, input, select, textarea, [role="button"], label {
+  html, body, a, button, select, [role="button"], label {
     cursor: none !important;
   }
+  input, textarea {
+    cursor: text !important;
+  }
 }
+
 

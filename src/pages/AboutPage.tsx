@@ -14,9 +14,9 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenResume }) => {
       {/* Header & Breadcrumb */}
       <div className="mb-12">
         <div className="flex items-center gap-2 text-xs font-mono-code text-white mb-4">
-          <Link to="/" className="hover:text-emerald-400 transition-colors">HOME</Link>
+          <Link to="/" className="hover:text-[#00FF66] transition-colors">HOME</Link>
           <span>/</span>
-          <span className="text-[#b2f1ff]">MY JOURNEY</span>
+          <span className="text-[#7C7CFF]">MY JOURNEY</span>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-8 border-b border-white/10">
@@ -66,7 +66,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenResume }) => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 mt-6 border-t border-white/10 text-xs font-mono-code">
             <div>
               <span className="block text-white mb-0.5">Degree</span>
-              <span className="text-[#b2f1ff] font-bold">B.Tech AI &amp; ML</span>
+              <span className="text-[#7C7CFF] font-bold">B.Tech AI &amp; ML</span>
             </div>
             <div>
               <span className="block text-white mb-0.5">Timeline</span>
@@ -78,7 +78,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenResume }) => {
             </div>
             <div>
               <span className="block text-white mb-0.5">Status</span>
-              <span className="text-emerald-400 font-bold">Active &amp; Enrolled</span>
+              <span className="text-[#00FF66] font-bold">Active &amp; Enrolled</span>
             </div>
           </div>
         </div>
@@ -86,8 +86,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenResume }) => {
         {/* Hackathon Honor Roll Card */}
         <div className="lg:col-span-4 p-8 rounded-3xl bg-neutral-900/80 border border-white/10 backdrop-blur-xl shadow-2xl flex flex-col justify-between">
           <div className="space-y-5">
-            <div className="flex items-center gap-2 text-xs font-mono-code text-[#b2f1ff] uppercase tracking-wider">
-              <Award className="w-4 h-4 text-[#b2f1ff]" />
+            <div className="flex items-center gap-2 text-xs font-mono-code text-[#7C7CFF] uppercase tracking-wider">
+              <Award className="w-4 h-4 text-[#7C7CFF]" />
               <span>COMPETITIVE RECORD</span>
             </div>
 

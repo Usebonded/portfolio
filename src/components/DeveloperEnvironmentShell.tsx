@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Terminal, CornerDownLeft, Sparkles, Copy, Check, RotateCcw, ShieldCheck } from 'lucide-react';
 import { PERSONAL_INFO, PROJECTS, SKILL_CATEGORIES } from '../data/portfolioData';
+import { TextContrastZone } from './TextContrastZone';
 
 interface HistoryItem {
   id: string;
@@ -488,9 +489,15 @@ export const DeveloperEnvironmentShell: React.FC = () => {
           </h2>
 
           {/* Subtitle */}
-          <p className="text-sm sm:text-base md:text-lg text-white font-light max-w-xl mx-auto leading-relaxed">
-            A live terminal simulation reflecting the active command prompt and user greeting.
-          </p>
+          <div className="flex justify-center">
+            <TextContrastZone
+              as="p"
+              align="center"
+              className="text-sm sm:text-base md:text-lg text-[#F2F0E6] font-light max-w-xl mx-auto leading-relaxed"
+            >
+              A live terminal simulation reflecting the active command prompt and user greeting.
+            </TextContrastZone>
+          </div>
         </div>
 
         {/* Terminal Window Card (Matches navigation bar glassmorphism & reference image) */}
@@ -526,7 +533,7 @@ export const DeveloperEnvironmentShell: React.FC = () => {
                 title="Copy terminal contents"
                 className="p-1.5 rounded-lg text-white hover:bg-white/10 transition-colors"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-[#E5E7EB]" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-[#A6A6A0]" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
               <button
                 onClick={(e) => {

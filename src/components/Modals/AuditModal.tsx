@@ -102,7 +102,7 @@ export const AuditModal: React.FC<AuditModalProps> = ({ isOpen, onClose }) => {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 text-[#E5E7EB] border border-white/10 text-xs font-semibold shrink-0">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 text-[#A6A6A0] border border-white/10 text-xs font-semibold shrink-0">
                   <CheckCircle className="w-3.5 h-3.5" />
                   <span>{item.status}</span>
                 </div>

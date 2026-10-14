@@ -34,7 +34,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             to="/projects"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/20 hover:border-white/40 hover:bg-white/10 text-white font-mono-code text-xs uppercase tracking-wider transition-all hover:scale-105 shadow-xl group"
           >
-            <Layers className="w-4 h-4 text-[#b2f1ff]" />
+            <Layers className="w-4 h-4 text-[#7C7CFF]" />
             <span>Open Complete Project Archive &amp; Specs</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -50,7 +50,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             to="/systems"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/20 hover:border-white/40 hover:bg-white/10 text-white font-mono-code text-xs uppercase tracking-wider transition-all hover:scale-105 shadow-xl group"
           >
-            <Cpu className="w-4 h-4 text-[#b2f1ff]" />
+            <Cpu className="w-4 h-4 text-[#7C7CFF]" />
             <span>Inspect Full 32-Skill Technical Competencies</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -66,7 +66,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             to="/about"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/5 border border-white/20 hover:border-white/40 hover:bg-white/10 text-white font-mono-code text-xs uppercase tracking-wider transition-all hover:scale-105 shadow-xl group"
           >
-            <Compass className="w-4 h-4 text-[#b2f1ff]" />
+            <Compass className="w-4 h-4 text-[#7C7CFF]" />
             <span>Read Complete Chronology &amp; Academic Inception</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </Link>

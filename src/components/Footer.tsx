@@ -122,7 +122,7 @@ export const Footer: React.FC<FooterProps> = ({
 
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 text-white text-[11px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#E5E7EB] animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#A6A6A0] animate-pulse" />
               <span>SYS.NORM // ACTIVE</span>
             </span>
 

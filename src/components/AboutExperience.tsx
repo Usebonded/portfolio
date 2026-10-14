@@ -1,5 +1,6 @@
 import React from 'react';
 import { Download, GraduationCap, Trophy, Brain, Briefcase, Shield, Award } from 'lucide-react';
+import { TextContrastZone } from './TextContrastZone';
 
 interface AboutExperienceProps {
   onOpenResume: () => void;
@@ -74,7 +75,7 @@ const TimelineMilestoneItem: React.FC<{
       >
         {isLeft ? (
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-mono-code bg-white/5 border border-white/10 text-[#E5E7EB] uppercase tracking-wider mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-mono-code bg-white/5 border border-white/10 text-[#A6A6A0] uppercase tracking-wider mb-2">
               <Icon className="w-3 h-3 text-emerald-400" />
               <span>{item.date} · {item.category}</span>
             </div>
@@ -229,6 +230,8 @@ export const AboutExperience: React.FC<AboutExperienceProps> = ({ onOpenResume }
 
   return (
     <section id="timeline" className="py-28 md:py-36 bg-transparent relative overflow-hidden border-t border-white/5 text-white">
+      <div id="about" className="absolute -top-24 pointer-events-none" />
+      <div id="experience" className="absolute -top-24 pointer-events-none" />
       {/* Background Radial Dots (Velos Timeline) */}
       <div
         className="absolute inset-0 z-0 opacity-15"
@@ -255,9 +258,15 @@ export const AboutExperience: React.FC<AboutExperienceProps> = ({ onOpenResume }
           <h2 className="text-5xl md:text-7xl font-bricolage text-white font-semibold tracking-tight">
             My Journey
           </h2>
-          <p className="text-sm sm:text-base text-white max-w-2xl mx-auto mt-4 font-light leading-relaxed">
-            Exact timeline from college inception in June 2025, national hackathon sprints, industry internship, through graduation in 2029.
-          </p>
+          <div className="flex justify-center mt-4">
+            <TextContrastZone
+              as="p"
+              align="center"
+              className="text-sm sm:text-base text-[#F2F0E6] max-w-2xl mx-auto font-light leading-relaxed py-2 px-6"
+            >
+              Exact timeline from college inception in June 2025, national hackathon sprints, industry internship, through graduation in 2029.
+            </TextContrastZone>
+          </div>
 
           <div className="mt-6 flex justify-center">
             <button

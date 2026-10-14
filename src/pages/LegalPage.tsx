@@ -11,14 +11,14 @@ export const LegalPage: React.FC = () => {
     <div className="pt-28 pb-20 max-w-4xl mx-auto px-6 text-white">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs font-mono-code text-white mb-6">
-        <Link to="/" className="hover:text-emerald-400 transition-colors">HOME</Link>
+        <Link to="/" className="hover:text-[#00FF66] transition-colors">HOME</Link>
         <span>/</span>
-        <span className="text-[#b2f1ff]">{isPrivacy ? 'PRIVACY POLICY' : 'TERMS OF SERVICE'}</span>
+        <span className="text-[#7C7CFF]">{isPrivacy ? 'PRIVACY POLICY' : 'TERMS OF SERVICE'}</span>
       </div>
 
       <div className="p-8 sm:p-12 rounded-3xl bg-neutral-900/80 border border-white/10 backdrop-blur-xl shadow-2xl space-y-6">
         <div className="flex items-center gap-4 pb-6 border-b border-white/10">
-          <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-[#b2f1ff]">
+          <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-[#7C7CFF]">
             {isPrivacy ? <ShieldCheck className="w-6 h-6" /> : <FileText className="w-6 h-6" />}
           </div>
           <div>
@@ -52,7 +52,7 @@ export const LegalPage: React.FC = () => {
                 <h2 className="text-lg font-bricolage font-semibold text-white mb-2">3. Direct Data Deletion Inquiries</h2>
                 <p>
                   You may request the immediate deletion of any submitted messages or transcripts by contacting Savar directly at{' '}
-                  <a href={`mailto:${PERSONAL_INFO.email}`} className="text-[#b2f1ff] underline underline-offset-4">
+                  <a href={`mailto:${PERSONAL_INFO.email}`} className="text-[#7C7CFF] underline underline-offset-4">
                     {PERSONAL_INFO.email}
                   </a>.
                 </p>

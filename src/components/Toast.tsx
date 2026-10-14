@@ -29,7 +29,7 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismis
           className="pointer-events-auto flex items-start gap-3 p-4 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 transition-all transform animate-in slide-in-from-bottom-5 duration-200"
         >
           {toast.type === 'success' && (
-            <CheckCircle2 className="w-5 h-5 text-[#E5E7EB] shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-5 h-5 text-[#00FF66] shrink-0 mt-0.5" />
           )}
           {toast.type === 'error' && (
             <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />

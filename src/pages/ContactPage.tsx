@@ -14,9 +14,9 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNotify }) => {
       {/* Header & Breadcrumb */}
       <div className="mb-12">
         <div className="flex items-center gap-2 text-xs font-mono-code text-white mb-4">
-          <Link to="/" className="hover:text-emerald-400 transition-colors">HOME</Link>
+          <Link to="/" className="hover:text-[#00FF66] transition-colors">HOME</Link>
           <span>/</span>
-          <span className="text-[#b2f1ff]">DISPATCH COMMS</span>
+          <span className="text-[#7C7CFF]">DISPATCH COMMS</span>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-8 border-b border-white/10">
@@ -30,8 +30,8 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNotify }) => {
           </div>
 
           <div className="text-right hidden sm:block font-mono-code text-xs text-white">
-            <div className="flex items-center gap-2 justify-end text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="flex items-center gap-2 justify-end text-[#00FF66]">
+              <span className="w-2 h-2 rounded-full bg-[#00FF66] animate-pulse" />
               <span>Channels Live &amp; Monitored</span>
             </div>
             <div className="text-[11px] text-white mt-1">Guaranteed SLA &lt; 24h</div>
@@ -47,7 +47,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNotify }) => {
       {/* Recruiter / Collaboration FAQ Grid */}
       <div className="p-8 sm:p-12 rounded-3xl bg-neutral-900/80 border border-white/10 backdrop-blur-xl mb-16 space-y-8">
         <div>
-          <span className="text-xs font-mono-code uppercase tracking-wider text-[#b2f1ff]">
+          <span className="text-xs font-mono-code uppercase tracking-wider text-[#7C7CFF]">
             OPPORTUNITY PARAMETERS
           </span>
           <h2 className="text-2xl sm:text-3xl font-bricolage font-bold text-white mt-1">
@@ -57,7 +57,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNotify }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs sm:text-sm">
           <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2">
-            <div className="flex items-center gap-2 text-emerald-400 font-mono-code text-xs">
+            <div className="flex items-center gap-2 text-[#00FF66] font-mono-code text-xs">
               <Clock className="w-4 h-4" />
               <span>AVAILABILITY</span>
             </div>

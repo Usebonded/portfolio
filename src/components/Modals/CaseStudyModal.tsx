@@ -67,6 +67,9 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ project, onClose
             alt={`${project.title} interface architecture`}
             referrerPolicy="no-referrer"
             loading="lazy"
+            decoding="async"
+            width="1280"
+            height="720"
             className="w-full h-full object-cover"
             onError={(e) => {
               // Graceful fallback container if asset loading fails
@@ -108,7 +111,7 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ project, onClose
           </div>
 
           <div className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/20">
-            <div className="flex items-center gap-2 text-[#E5E7EB] text-sm font-semibold mb-2">
+            <div className="flex items-center gap-2 text-[#A6A6A0] text-sm font-semibold mb-2">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>Architectural Solution</span>
             </div>

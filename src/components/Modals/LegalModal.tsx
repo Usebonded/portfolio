@@ -60,7 +60,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
           {isPrivacy ? (
             <>
               <p>
-                This Privacy Policy describes how your information is handled when visiting the engineering portfolio of Savar Shetty (<code className="text-xs font-mono">shettysavar02@gmail.com</code>).
+                This Privacy Policy describes how your information is handled when visiting the engineering portfolio of Savar Shetty (<a href="mailto:shettysavar02@gmail.com" className="text-blue-600 dark:text-blue-400 underline hover:opacity-80">shettysavar02@gmail.com</a>).
               </p>
               <h3 className="font-semibold text-zinc-900 dark:text-white text-sm mt-3">1. Information Collection</h3>
               <p>

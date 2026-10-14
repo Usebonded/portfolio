@@ -1,53 +1,153 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 interface ThreeCanvasBackgroundProps {
-  theme: 'dark' | 'light';
+  theme?: 'dark' | 'light';
 }
 
-export const ThreeCanvasBackground: React.FC<ThreeCanvasBackgroundProps> = ({ theme: _theme }) => {
+export const ThreeCanvasBackground: React.FC<ThreeCanvasBackgroundProps> = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // HUD State (internal control without rendering the floating dock)
+  const [, setCurrentMode] = useState<number>(3);
+  const [, setCurrentPalette] = useState<number>(0);
+  const [, setIsAudioActive] = useState<boolean>(false);
+  const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
+  const [, setIsCameraLoading] = useState<boolean>(false);
+  const [, setIsHandTracking] = useState<boolean>(false);
+
+  // Global callbacks container
+  const setModeRef = useRef<(idx: number) => void>(() => {});
+  const cycleColorRef = useRef<(idx: number) => void>(() => {});
+  const toggleAudioRef = useRef<() => void>(() => {});
+  const toggleCameraRef = useRef<() => void>(() => {});
+  const captureSnapshotRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    // --- CONFIGURATION ---
     const isMobile = window.innerWidth < 768;
-    const particleCount = isMobile ? 350000 : 700000;
-    const cameraZ = isMobile ? 38 : 28;
+    const CONFIG = {
+      particleCount: isMobile ? 65000 : 120000,
+      cameraZ: isMobile ? 40 : 28,
+      bgColor: 0x030305
+    };
+
+    // --- STATE ---
+    const STATE = {
+      mouse: new THREE.Vector2(0, 0),
+      hands: {
+        active: false,
+        left: { pos: new THREE.Vector3(-100, 0, 0), target: new THREE.Vector3(-100, 0, 0), state: 0 },
+        right: { pos: new THREE.Vector3(100, 0, 0), target: new THREE.Vector3(100, 0, 0), state: 0 }
+      },
+      mode: 3,
+      targetMode: 3,
+      audioLevel: 0,
+      time: 0,
+      colorPalette: 0
+    };
 
     // --- SCENE SETUP ---
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
-      60,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      250
-    );
-    camera.position.z = cameraZ;
-
     const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
+      antialias: false,
       powerPreference: 'high-performance',
+      alpha: false,
       stencil: false,
-      depth: false
+      depth: true
     });
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x000000, 0); // Transparent canvas background
     renderer.toneMapping = THREE.CineonToneMapping;
-    renderer.toneMappingExposure = 1.55;
+    renderer.toneMappingExposure = 1.2;
 
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    // --- SHADERS (From Holographic Particle Universe) ---
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(CONFIG.bgColor, 0.015);
+    scene.background = new THREE.Color(CONFIG.bgColor);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.z = CONFIG.cameraZ;
+
+    // --- POST PROCESSING ---
+    const renderScene = new RenderPass(scene, camera);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      1.5,
+      0.4,
+      0.85
+    );
+    bloomPass.threshold = 0.1;
+    bloomPass.strength = 1.0;
+    bloomPass.radius = 0.8;
+
+    const outputShader = {
+      uniforms: {
+        tDiffuse: { value: null },
+        uTime: { value: 0 },
+        uRGBShift: { value: 0.002 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float uTime;
+        uniform float uRGBShift;
+        varying vec2 vUv;
+        
+        float random(vec2 p) {
+          return fract(sin(dot(p.xy, vec2(12.9898, 78.233))) * 43758.5453);
+        }
+
+        void main() {
+          vec2 uv = vUv;
+          
+          float dist = distance(uv, vec2(0.5));
+          vec2 offset = (uv - 0.5) * dist * uRGBShift;
+          
+          float r = texture2D(tDiffuse, uv + offset).r;
+          float g = texture2D(tDiffuse, uv).g;
+          float b = texture2D(tDiffuse, uv - offset).b;
+          
+          vec3 color = vec3(r, g, b);
+          
+          float noise = (random(uv + uTime) - 0.5) * 0.04;
+          color += noise;
+          
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `
+    };
+
+    const finalPass = new ShaderPass(outputShader);
+    const composer = new EffectComposer(renderer);
+    composer.addPass(renderScene);
+    composer.addPass(bloomPass);
+    composer.addPass(finalPass);
+
+    // --- PARTICLE SHADERS ---
     const particleVertexShader = `
       uniform float uTime;
       uniform float uMode;
+      uniform vec3 uHandLeft;
       uniform vec3 uHandRight;
+      uniform float uHandLeftState;
+      uniform float uHandRightState;
       uniform float uAudio;
       
       attribute vec3 aRandom;
@@ -55,8 +155,9 @@ export const ThreeCanvasBackground: React.FC<ThreeCanvasBackgroundProps> = ({ th
 
       varying vec3 vColor;
       varying float vAlpha;
+      varying float vDist;
 
-      // Simplex Noise (289 mod)
+      // Simplex Noise
       vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
       vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
       vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -105,20 +206,19 @@ export const ThreeCanvasBackground: React.FC<ThreeCanvasBackgroundProps> = ({ th
         return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
       }
 
-      // Mode 0: Nebula Sphere
+      // --- Shapes ---
       vec3 getPosSphere(float idx) {
-        float phi = acos(-1.0 + (2.0 * idx) / ${particleCount}.0);
-        float theta = sqrt(${particleCount}.0 * 3.14159265) * phi;
-        float r = 13.0 + aRandom.x * 2.5;
+        float phi = acos(-1.0 + (2.0 * idx) / ${CONFIG.particleCount}.0);
+        float theta = sqrt(${CONFIG.particleCount}.0 * 3.1415926) * phi;
+        float r = 12.0 + aRandom.x * 2.0;
         return vec3(r * sin(phi) * cos(theta), r * sin(phi) * sin(theta), r * cos(phi));
       }
 
-      // Mode 1: Quantum Torus
       vec3 getPosTorus(float idx) {
         float t = idx * 0.1;
-        float r = 11.0 + aRandom.y * 3.0;
-        float tube = 3.5 + aRandom.x * 2.0;
-        float angle = (idx / ${particleCount}.0) * 6.2831853 * 15.0;
+        float r = 10.0 + aRandom.y * 3.0;
+        float tube = 3.0 + aRandom.x * 2.0;
+        float angle = (idx / ${CONFIG.particleCount}.0) * 6.28 * 15.0;
         return vec3(
           (r + tube * cos(angle)) * cos(t),
           (r + tube * cos(angle)) * sin(t),
@@ -126,98 +226,87 @@ export const ThreeCanvasBackground: React.FC<ThreeCanvasBackgroundProps> = ({ th
         );
       }
 
-      // Mode 2: Cyber Lattice
       vec3 getPosLattice(float idx) {
-        float size = 26.0;
-        float step = pow(${particleCount}.0, 1.0/3.0);
+        float size = 25.0;
+        float step = pow(${CONFIG.particleCount}.0, 1.0/3.0);
         float x = mod(idx, step);
         float y = mod(floor(idx/step), step);
         float z = floor(idx/(step*step));
         return (vec3(x, y, z) / step - 0.5) * size;
       }
 
-      // Mode 3: Warp Vortex
       vec3 getPosVortex(float idx) {
-        float r = (idx / ${particleCount}.0) * 19.0;
+        float r = (idx / ${CONFIG.particleCount}.0) * 18.0;
         float ang = r * 3.0;
-        float h = (aRandom.x - 0.5) * 8.5 * (1.0 - r/21.0);
+        float h = (aRandom.x - 0.5) * 8.0 * (1.0 - r/20.0);
         return vec3(r * cos(ang), r * sin(ang), h);
       }
 
       void main() {
-        float t = uTime * 0.08;
+        float t = uTime * 0.15; 
         vec3 pos = vec3(0.0);
-
+        
+        float m = uMode; 
         vec3 pSphere = getPosSphere(aIndex);
         vec3 pTorus = getPosTorus(aIndex);
         vec3 pLattice = getPosLattice(aIndex);
         vec3 pVortex = getPosVortex(aIndex);
 
-        // Organic turbulence noise
         vec3 noiseBase = vec3(
           snoise(vec3(aIndex*0.01, t*0.2, 0.0)),
           snoise(vec3(aIndex*0.01, 0.0, t*0.2)),
           snoise(vec3(0.0, aIndex*0.01, t*0.2))
         );
 
-        pSphere += noiseBase * 2.8;
-        pTorus += noiseBase * 1.6;
-        pLattice += noiseBase * 1.2;
-        pVortex += noiseBase * 1.6;
+        pSphere += noiseBase * 4.0;
+        pTorus += noiseBase * 2.0;
+        pLattice += noiseBase * 1.5;
+        pVortex += noiseBase * 2.0;
 
-        // Torus Rotation
-        float c = cos(t * 0.25); float s = sin(t * 0.25);
+        float c = cos(t*0.3); float s = sin(t*0.3);
         pTorus.xy = mat2(c, -s, s, c) * pTorus.xy;
         pTorus.xz = mat2(c, -s, s, c) * pTorus.xz;
 
-        // Vortex Rotation
-        float va = t * 0.6 - length(pVortex.xy) * 0.15;
+        float va = t * 1.0 - length(pVortex.xy)*0.2;
         float vc = cos(va); float vs = sin(va);
         pVortex.xy = mat2(vc, -vs, vs, vc) * pVortex.xy;
 
-        // Permanent Cosmic Nebula Mode with Clockwise Vertex / Vortex Swirl
-        pos = pSphere;
+        if(m <= 0.0) pos = pSphere;
+        else if(m <= 1.0) pos = mix(pSphere, pTorus, m);
+        else if(m <= 2.0) pos = mix(pTorus, pLattice, m - 1.0);
+        else if(m <= 3.0) pos = mix(pLattice, pVortex, m - 2.0);
+        else pos = pVortex;
 
-        // Clockwise Vertex / Vortex Motion (Reduced speed for graceful, calm flow):
-        // Angle decreases over time (negative), rotating clockwise in screen-space.
-        float rXY = length(pos.xy);
-        float vortexAngle = -(t * 0.45 + rXY * 0.026 + aRandom.x * 0.12);
-        float cRot = cos(vortexAngle);
-        float sRot = sin(vortexAngle);
-        pos.xy = mat2(cRot, sRot, -sRot, cRot) * pos.xy;
-        pos.z += sin(rXY * 0.35 - t * 0.4) * 1.2;
+        pos *= (1.0 + uAudio * 0.4);
 
-        // Interactive Magnetic Cursor Attraction & Fluid Swirl Follow (36 Units Radius)
+        if (uHandLeft.x > -90.0) {
+          float d = distance(pos, uHandLeft);
+          float influence = smoothstep(12.0, 0.0, d);
+          if (uHandLeftState < 0.0) {
+            pos = mix(pos, uHandLeft, influence * 0.3); 
+          } else {
+            pos += normalize(pos - uHandLeft) * influence * 8.0;
+          }
+        }
+        
         if (uHandRight.x < 90.0) {
-          vec3 toCursor = uHandRight - pos;
-          float d = length(toCursor);
-          
-          // Balanced gravitational pull across 36.0 units radius
-          float pull = smoothstep(36.0, 2.0, d);
-          pos += normalize(toCursor) * pull * 6.0;
-          
-          // Tangential fluid swirl vortex within the 36-unit envelope
-          vec3 tangent = vec3(-toCursor.y, toCursor.x, sin(d * 0.4 + uTime * 1.4) * 3.5);
-          pos += normalize(tangent) * pull * 4.2;
-
-          // Core cushion repulsion right at the pointer tip
-          float repel = smoothstep(4.0, 0.0, d);
-          pos -= normalize(toCursor) * repel * 4.0;
+          float d = distance(pos, uHandRight);
+          float influence = smoothstep(12.0, 0.0, d);
+          if (uHandRightState < 0.0) {
+            pos = mix(pos, uHandRight, influence * 0.3);
+          } else {
+            pos += normalize(pos - uHandRight) * influence * 8.0;
+          }
         }
 
         vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-        // Scaled particle size increased by 20% for optimal stellar prominence with 500K nodes
-        gl_PointSize = (0.72 + aRandom.y * 0.84) * (24.0 / -mvPosition.z);
+        gl_PointSize = (1.5 + aRandom.y * 2.0 + uAudio * 5.0) * (30.0 / -mvPosition.z);
         gl_Position = projectionMatrix * mvPosition;
-
-        // Depth fading
-        float depthFade = smoothstep(75.0, 10.0, -mvPosition.z);
-        vAlpha = depthFade * (0.60 + aRandom.z * 0.40);
         
-        // 180° Linear Gradient top-to-bottom coordinate (Screen Y mapped from +1.0 to -1.0)
-        float screenY = gl_Position.y / gl_Position.w;
-        float gradT = clamp(0.5 - screenY * 0.5, 0.0, 1.0);
-        vColor = vec3(gradT, pos.z, 0.0);
+        vDist = length(pos);
+        float depthFade = smoothstep(60.0, 10.0, -mvPosition.z);
+        vAlpha = depthFade * (0.2 + aRandom.z * 0.6);
+        vColor = pos; 
       }
     `;
 
@@ -226,57 +315,56 @@ export const ThreeCanvasBackground: React.FC<ThreeCanvasBackgroundProps> = ({ th
       uniform vec3 uColor2;
       varying vec3 vColor;
       varying float vAlpha;
+      varying float vDist;
 
       void main() {
         vec2 center = gl_PointCoord - 0.5;
         float dist = length(center);
         if (dist > 0.5) discard;
-
-        // Circular glow decay with enhanced disc luminescence
-        float glow = 1.0 - smoothstep(0.0, 0.5, dist);
-        glow = pow(glow, 1.15);
-        float coreHotspot = 1.0 - smoothstep(0.0, 0.18, dist);
-
-        // Linear gradient 180°: #b2f1ff (Top), #5555b7 (Middle), #03102f (Bottom)
-        float t = vColor.x;
-        vec3 colorTop = vec3(0.698, 0.945, 1.000); // #b2f1ff (Arctic Cyan Ice)
-        vec3 colorMid = vec3(0.333, 0.333, 0.718); // #5555b7 (Royal Periwinkle Indigo)
-        vec3 colorBot = vec3(0.012, 0.063, 0.184); // #03102f (Midnight Navy Abyss)
         
-        vec3 col;
-        if (t < 0.5) {
-          col = mix(colorTop, colorMid, t * 2.0);
-        } else {
-          col = mix(colorMid, colorBot, (t - 0.5) * 2.0);
-        }
+        float glow = 1.0 - smoothstep(0.0, 0.5, dist);
+        glow = pow(glow, 1.5);
 
-        // Luminescent star-core hotspot with ethereal arctic diamond radiance
-        vec3 brightCol = col * 1.85 + colorTop * (coreHotspot * 0.50);
-
-        gl_FragColor = vec4(brightCol, vAlpha * glow);
+        vec3 col = mix(uColor1, uColor2, smoothstep(-20.0, 20.0, vColor.x + vColor.y));
+        
+        gl_FragColor = vec4(col, vAlpha * glow);
       }
     `;
 
-    // --- GEOMETRY SETUP ---
+    // Geometry Setup
     const geometry = new THREE.BufferGeometry();
-    const indices = new Float32Array(particleCount);
-    const randoms = new Float32Array(particleCount * 3);
+    const indices = new Float32Array(CONFIG.particleCount);
+    const randoms = new Float32Array(CONFIG.particleCount * 3);
 
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < CONFIG.particleCount; i++) {
       indices[i] = i;
       randoms[i * 3] = Math.random();
       randoms[i * 3 + 1] = Math.random();
       randoms[i * 3 + 2] = Math.random();
     }
 
-    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(particleCount * 3).fill(0), 3));
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(CONFIG.particleCount * 3).fill(0), 3));
     geometry.setAttribute('aIndex', new THREE.BufferAttribute(indices, 1));
     geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 3));
+
+    const palettes = [
+      { c1: new THREE.Color('#9333ea'), c2: new THREE.Color('#3b82f6') }, // Purple / Blue (Default)
+      { c1: new THREE.Color('#818cf8'), c2: new THREE.Color('#2dd4bf') }, // Indigo / Teal
+      { c1: new THREE.Color('#f472b6'), c2: new THREE.Color('#60a5fa') }, // Pink / Blue
+      { c1: new THREE.Color('#fb923c'), c2: new THREE.Color('#e11d48') }  // Orange / Rose
+    ];
 
     const material = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
-        uHandRight: { value: new THREE.Vector3(100, 0, 0) }
+        uMode: { value: 3.0 },
+        uHandLeft: { value: new THREE.Vector3(-100, 0, 0) },
+        uHandRight: { value: new THREE.Vector3(100, 0, 0) },
+        uHandLeftState: { value: 0 },
+        uHandRightState: { value: 0 },
+        uAudio: { value: 0 },
+        uColor1: { value: palettes[0].c1.clone() },
+        uColor2: { value: palettes[0].c2.clone() }
       },
       vertexShader: particleVertexShader,
       fragmentShader: particleFragmentShader,
@@ -288,115 +376,328 @@ export const ThreeCanvasBackground: React.FC<ThreeCanvasBackgroundProps> = ({ th
     const points = new THREE.Points(geometry, material);
     scene.add(points);
 
-    // --- STATE TRACKING & CURSOR DYNAMICS ---
-    let time = 0;
-    const mouseWorld = new THREE.Vector3(100, 0, 0);
-    const targetMouseWorld = new THREE.Vector3(100, 0, 0);
+    // --- AUDIO SYSTEM ---
+    let audioContext: AudioContext | null = null;
+    let analyser: AnalyserNode | null = null;
+    let dataArray: Uint8Array | null = null;
 
-    const mouseNorm = { x: 0, y: 0 };
-    const targetMouseNorm = { x: 0, y: 0 };
-
-    const updatePointer = (clientX: number, clientY: number) => {
-      const x = (clientX / window.innerWidth) * 2 - 1;
-      const y = -(clientY / window.innerHeight) * 2 + 1;
-      targetMouseNorm.x = x;
-      targetMouseNorm.y = y;
-      targetMouseWorld.set(x * 30, y * 18, 0);
+    const setupAudio = async () => {
+      if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+        analyser = null;
+        dataArray = null;
+        setIsAudioActive(false);
+        material.uniforms.uAudio.value = 0;
+        return;
+      }
+      try {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        audioContext = new AudioCtx();
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const source = audioContext.createMediaStreamSource(stream);
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 64;
+        analyser.smoothingTimeConstant = 0.8;
+        source.connect(analyser);
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        setIsAudioActive(true);
+      } catch (e) {
+        console.warn('Audio permission denied or unavailable', e);
+        setIsAudioActive(false);
+      }
     };
 
+    // --- HAND TRACKING SYSTEM (MediaPipe with CDN lazy script injection) ---
+    let cameraInstance: { start: () => Promise<void>; stop?: () => void } | null = null;
+    let handsInstance: { close?: () => void } | null = null;
+
+    const initHandTracking = async () => {
+      if (isCameraActive) {
+        // Turn off
+        if (cameraInstance && cameraInstance.stop) cameraInstance.stop();
+        if (handsInstance && handsInstance.close) handsInstance.close();
+        setIsCameraActive(false);
+        setIsHandTracking(false);
+        STATE.hands.active = false;
+        STATE.hands.left.target.set(-100, 0, 0);
+        STATE.hands.right.target.set(100, 0, 0);
+        return;
+      }
+
+      setIsCameraLoading(true);
+
+      const loadScript = (src: string): Promise<boolean> => {
+        return new Promise((resolve) => {
+          if (document.querySelector(`script[src="${src}"]`)) {
+            resolve(true);
+            return;
+          }
+          const s = document.createElement('script');
+          s.src = src;
+          s.crossOrigin = 'anonymous';
+          s.onload = () => resolve(true);
+          s.onerror = () => resolve(false);
+          document.head.appendChild(s);
+        });
+      };
+
+      try {
+        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js');
+
+        const windowHands = (window as unknown as { Hands?: new (opts: { locateFile: (file: string) => string }) => {
+          setOptions: (o: Record<string, unknown>) => void;
+          onResults: (cb: (results: { multiHandLandmarks?: { x: number; y: number; z: number }[][]; multiHandedness?: { label: string }[] }) => void) => void;
+          send: (opts: { image: HTMLVideoElement }) => Promise<void>;
+          close?: () => void;
+        } }).Hands;
+
+        const windowCamera = (window as unknown as { Camera?: new (v: HTMLVideoElement, opts: { onFrame: () => Promise<void>; width: number; height: number }) => { start: () => Promise<void>; stop?: () => void } }).Camera;
+
+        if (!windowHands || !windowCamera || !videoRef.current) {
+          throw new Error('MediaPipe libraries unavailable.');
+        }
+
+        const hands = new windowHands({
+          locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+          maxNumHands: 2,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.5,
+          minTrackingConfidence: 0.5
+        });
+
+        hands.onResults((results) => {
+          if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+            STATE.hands.active = false;
+            STATE.hands.left.target.set(-100, 0, 0);
+            STATE.hands.right.target.set(100, 0, 0);
+            setIsHandTracking(false);
+          } else {
+            STATE.hands.active = true;
+            setIsHandTracking(true);
+
+            for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+              const landmarks = results.multiHandLandmarks[i];
+              const handedness = results.multiHandedness && results.multiHandedness[i] ? results.multiHandedness[i].label : 'Right';
+
+              const x = (0.5 - landmarks[9].x) * 50;
+              const y = (0.5 - landmarks[9].y) * 35;
+              const z = -landmarks[9].z * 30;
+
+              const thumbTip = landmarks[4];
+              const indexTip = landmarks[8];
+              const pinchDist = Math.sqrt(
+                Math.pow(thumbTip.x - indexTip.x, 2) + Math.pow(thumbTip.y - indexTip.y, 2)
+              );
+
+              let state = 1.0;
+              if (pinchDist < 0.05) state = -1.0;
+
+              if (handedness === 'Right') {
+                STATE.hands.right.target.set(x, y, z);
+                STATE.hands.right.state = state;
+              } else {
+                STATE.hands.left.target.set(x, y, z);
+                STATE.hands.left.state = state;
+              }
+            }
+          }
+        });
+
+        const cam = new windowCamera(videoRef.current, {
+          onFrame: async () => {
+            if (videoRef.current) {
+              await hands.send({ image: videoRef.current });
+            }
+          },
+          width: 640,
+          height: 480
+        });
+
+        await cam.start();
+        cameraInstance = cam;
+        handsInstance = hands;
+        setIsCameraActive(true);
+      } catch (err) {
+        console.warn('Camera hand tracking initialization error:', err);
+      } finally {
+        setIsCameraLoading(false);
+      }
+    };
+
+    // --- INTERACTION LOGIC EXPORTS ---
+    const setMode = (idx: number) => {
+      STATE.targetMode = idx;
+      setCurrentMode(idx);
+    };
+
+    const cycleColor = (idx: number) => {
+      STATE.colorPalette = idx;
+      setCurrentPalette(idx);
+    };
+
+    const captureSnapshot = () => {
+      composer.render();
+      const link = document.createElement('a');
+      link.download = `aether-particle-universe-${Date.now()}.png`;
+      link.href = renderer.domElement.toDataURL('image/png');
+      link.click();
+    };
+
+    // Expose on global window object for full compatibility with demo controls
+    (window as unknown as { setMode: typeof setMode; cycleColor: typeof cycleColor }).setMode = setMode;
+    (window as unknown as { setMode: typeof setMode; cycleColor: typeof cycleColor }).cycleColor = cycleColor;
+
+    setModeRef.current = setMode;
+    cycleColorRef.current = cycleColor;
+    toggleAudioRef.current = setupAudio;
+    toggleCameraRef.current = initHandTracking;
+    captureSnapshotRef.current = captureSnapshot;
+
+    // --- MOUSE & TOUCH FALLBACK ---
     const handleMouseMove = (e: MouseEvent) => {
-      updatePointer(e.clientX, e.clientY);
+      if (STATE.hands.active) return;
+      const x = (e.clientX / window.innerWidth) * 2 - 1;
+      const y = -(e.clientY / window.innerHeight) * 2 + 1;
+      STATE.hands.right.target.set(x * 30, y * 20, 0);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches && e.touches.length > 0) {
-        updatePointer(e.touches[0].clientX, e.touches[0].clientY);
-      }
+      if (STATE.hands.active || !e.touches || e.touches.length === 0) return;
+      const x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+      const y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+      STATE.hands.right.target.set(x * 30, y * 20, 0);
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('touchstart', handleTouchMove, { passive: true });
 
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+      CONFIG.cameraZ = window.innerWidth < 768 ? 40 : 28;
     };
 
     window.addEventListener('resize', handleResize);
 
     // --- ANIMATION LOOP ---
-    let animationFrameId: number;
     const clock = new THREE.Clock();
+    let animationFrameId: number;
 
-    const animate = () => {
+    function animate() {
       animationFrameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
-      // Reduced global time delta for a calmer, majestic flow
-      time += delta * 0.75;
+      STATE.time += delta;
 
-      material.uniforms.uTime.value = time;
+      // Audio Level
+      if (analyser && dataArray) {
+        analyser.getByteFrequencyData(dataArray as any);
+        const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        STATE.audioLevel += (avg / 255 - STATE.audioLevel) * 0.1;
+        material.uniforms.uAudio.value = STATE.audioLevel;
+      }
 
-      // Smooth Mouse Coordinate Lerp
-      mouseNorm.x += (targetMouseNorm.x - mouseNorm.x) * 0.09;
-      mouseNorm.y += (targetMouseNorm.y - mouseNorm.y) * 0.09;
+      // Mode Transition
+      if (Math.abs(STATE.mode - STATE.targetMode) > 0.001) {
+        STATE.mode += (STATE.targetMode - STATE.mode) * 0.05;
+      } else {
+        STATE.mode = STATE.targetMode;
+      }
+      material.uniforms.uMode.value = STATE.mode;
 
-      mouseWorld.lerp(targetMouseWorld, 0.11);
-      material.uniforms.uHandRight.value.copy(mouseWorld);
+      // Update Time
+      material.uniforms.uTime.value = STATE.time;
+      finalPass.uniforms.uTime.value = STATE.time;
 
-      // 1. Particle Cloud Center Follows Cursor (Physical Translation)
-      points.position.x += (mouseNorm.x * 5.0 - points.position.x) * 0.075;
-      points.position.y += (mouseNorm.y * 3.5 - points.position.y) * 0.075;
+      // Smooth Hand/Mouse Movement
+      const lerpFactor = 0.1;
+      STATE.hands.left.pos.lerp(STATE.hands.left.target, lerpFactor);
+      STATE.hands.right.pos.lerp(STATE.hands.right.target, lerpFactor);
 
-      // 2. Dynamic 3D Universe Rotation with reduced speed and gentle Clockwise Vertex Swirl
-      const targetRotY = time * 0.018 + mouseNorm.x * 0.90;
-      const targetRotX = Math.sin(time * 0.025) * 0.07 - mouseNorm.y * 0.65;
-      const targetRotZ = -time * 0.045; // Smooth, slow clockwise rotation around Z axis
-      points.rotation.y += (targetRotY - points.rotation.y) * 0.08;
-      points.rotation.x += (targetRotX - points.rotation.x) * 0.08;
-      points.rotation.z += (targetRotZ - points.rotation.z) * 0.08;
+      material.uniforms.uHandLeft.value.copy(STATE.hands.left.pos);
+      material.uniforms.uHandRight.value.copy(STATE.hands.right.pos);
+      material.uniforms.uHandLeftState.value = STATE.hands.left.state;
+      material.uniforms.uHandRightState.value = STATE.hands.right.state;
 
-      // 3. Camera Parallax Tracking Follows Cursor
-      camera.position.x += (mouseNorm.x * 6.0 - camera.position.x) * 0.06;
-      camera.position.y += (mouseNorm.y * 4.0 - camera.position.y) * 0.06;
-      camera.lookAt(points.position.x * 0.4, points.position.y * 0.4, 0);
+      // Color Smooth Transition
+      const targetC1 = palettes[STATE.colorPalette].c1;
+      const targetC2 = palettes[STATE.colorPalette].c2;
+      material.uniforms.uColor1.value.lerp(targetC1, 0.05);
+      material.uniforms.uColor2.value.lerp(targetC2, 0.05);
 
-      renderer.render(scene, camera);
-    };
+      // Camera Sway (Subtle idle movement)
+      if (!STATE.hands.active) {
+        const zTarget = CONFIG.cameraZ + Math.sin(STATE.time * 0.5) * 2;
+        camera.position.z += (zTarget - camera.position.z) * 0.02;
+        camera.position.x = Math.sin(STATE.time * 0.2) * 2;
+        camera.position.y = Math.cos(STATE.time * 0.15) * 2;
+        camera.lookAt(0, 0, 0);
+      }
+
+      composer.render();
+    }
 
     animate();
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchstart', handleTouchMove);
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
+
+      if (audioContext) audioContext.close();
+      if (cameraInstance && cameraInstance.stop) cameraInstance.stop();
+      if (handsInstance && handsInstance.close) handsInstance.close();
+
       geometry.dispose();
       material.dispose();
       renderer.dispose();
     };
   }, []);
 
+  const modeNames = ['NEBULA CLOUD', 'QUANTUM TORUS', 'CYBER LATTICE', 'WARP VORTEX'];
+
   return (
     <>
-      {/* 180° Linear Gradient Cosmic Atmosphere Backdrop */}
+      {/* Hidden webcam video element for hand tracking */}
+      <video
+        ref={videoRef}
+        className="fixed top-0 left-0 w-1 h-1 opacity-0 pointer-events-none z-[-1]"
+        playsInline
+        muted
+      />
+
+      {/* Subtle Scanlines & Vignette */}
       <div
         aria-hidden="true"
-        className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
+        className="fixed inset-0 pointer-events-none z-10 opacity-30 mix-blend-overlay"
         style={{
-          background: 'linear-gradient(180deg, rgba(178,241,255,0.07) 0%, rgba(85,85,183,0.12) 50%, rgba(3,16,47,0.50) 100%)'
+          backgroundImage:
+            'linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.12))',
+          backgroundSize: '100% 4px'
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 pointer-events-none z-10"
+        style={{
+          background: 'radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.82) 125%)'
         }}
       />
 
-      {/* Three.js Canvas Container */}
+      {/* Main Three.js Holographic Universe Canvas Container */}
       <div
         ref={containerRef}
         aria-hidden="true"
         className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
-        style={{ opacity: 1 }}
       />
     </>
   );
 };
+

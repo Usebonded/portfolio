@@ -17,7 +17,7 @@ export const AmbientGlowFollower: React.FC = () => {
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300"
       style={{
-        background: `radial-gradient(600px circle at ${pos.x}px ${pos.y}px, rgba(99, 102, 241, 0.07), transparent 80%)`
+        background: `radial-gradient(650px circle at ${pos.x}px ${pos.y}px, rgba(91, 91, 255, 0.09), rgba(124, 124, 255, 0.04) 45%, transparent 75%)`
       }}
     />
   );
